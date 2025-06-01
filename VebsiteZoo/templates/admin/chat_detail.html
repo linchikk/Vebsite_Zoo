@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h3>Чат с {{ chat.user.username }}</h3>
+        <div id="connection-status" class="status-connected">
+            <i class="fas fa-circle"></i> Онлайн
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+        {% for message in chat.messages %}
+            <div class="message {% if message.user.is_admin %}admin-message{% else %}user-message{% endif %}">
+                <div class="message-header">
+                    <strong>{{ message.user.username }}</strong>
+                </div>
+                <div class="message-content">{{ message.content }}</div>
+                <div class="message-time">{{ message.timestamp.strftime('%H:%M') }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+   <form id="chat-form" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="chat-form">
+            {{ form.message(id="message-input", class="form-control", placeholder="Введите сообщение...") }}
+            <button type="submit" id="send-button">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const socket = io();
+    const chatId = {{ chat.id }};
+    const userId = {{ current_user.id }};
+    const username = "{{ current_user.username }}";
+    const messagesContainer = document.getElementById('chat-messages');
+
+    // Сохраняем позицию прокрутки перед обновлением
+    let scrollPosition = messagesContainer.scrollTop;
+    let scrollHeight = messagesContainer.scrollHeight;
+
+    // Подключение к чату
+    socket.on('connect', () => {
+        socket.emit('join_chat', { chat_id: chatId });
+        socket.emit('admin_join', { chat_id: chatId }); // Уведомляем о подключении админа
+    });
+
+    // Функция добавления сообщения
+    function addMessage(text, senderId, senderName, isNew = true) {
+        const messageDiv = document.createElement('div');
+        const isAdmin = (senderId === userId);
+
+        messageDiv.className = isAdmin ? 'message admin-message' : 'message user-message';
+        messageDiv.innerHTML = `
+            <div class="message-header"><strong>${senderName}</strong></div>
+            <div class="message-content">${text}</div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        `;
+
+        messagesContainer.appendChild(messageDiv);
+
+
+        const shouldScroll = isNew && (scrollHeight - scrollPosition < messagesContainer.clientHeight + 100);
+
+        if (shouldScroll) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else if (!isNew) {
+            // Сохраняем позицию прокрутки при загрузке истории
+            messagesContainer.scrollTop = scrollPosition;
+        }
+
+        scrollHeight = messagesContainer.scrollHeight;
+    }
+
+    // Инициализация существующих сообщений
+    {% for message in chat.messages %}
+        addMessage(
+            "{{ message.content }}",
+            {{ message.user.id }},
+            "{{ message.user.username }}",
+            false // Помечаем как существующие сообщения
+        );
+    {% endfor %}
+
+    // Обработчик отправки сообщения
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+    e.preventDefault(); // Ключевое исправление
+    sendMessage();
+  }
+    });
+
+    function sendMessage() {
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value.trim();
+
+        if (message) {
+            socket.emit('message', {
+                chat_id: chatId,
+                message: message
+            });
+
+            // Очищаем поле ввода
+            messageInput.value = '';
+        }
+    }
+
+    // Обработчик новых сообщений
+    socket.on('new_message', (data) => {
+        if (data.chat_id == chatId) {
+            // Сохраняем текущую позицию перед добавлением
+            scrollPosition = messagesContainer.scrollTop;
+
+            addMessage(
+                data.message,
+                data.sender_id,
+                data.sender_name,
+                true // Помечаем как новое сообщение
+            );
+        }
+    });
+
+    // Обработчик прокрутки для сохранения позиции
+    messagesContainer.addEventListener('scroll', () => {
+        scrollPosition = messagesContainer.scrollTop;
+    });
+});
+</script>
+{% endblock %}

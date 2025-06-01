@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="search-results">
+    <div class="container">
+        <h2 class="mb-4">
+            Результаты поиска:
+            <span class="text-primary">"{{ search_query }}"</span>
+        </h2>
+
+        {% if products.items %}
+            <!-- Обёртка с увеличенным gap и отступами -->
+            <div class="row row-cols-4 g-4" style="display: flex; flex-wrap: wrap; gap: 30px; margin-left: 40px;">
+                {% for product in products.items %}
+                <!-- Внешняя рамка карточки с фоном, закруглёнными углами и отступом -->
+                <div class="card shadow-custom" style=" background-color: white; border: border-radius: 15px; overflow: hidden;
+                width: 330px; height: 450px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                    <div class="card h-100 shadow-sm border-0">
+                        {% if product.image %}
+                        <img src="{{ url_for('static', filename=product.image) }}"
+                             class="card-img-top img-fluid"
+                             alt="{{ product.name }}"
+                             style="height: 250px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center"
+                             style="height: 250px;">
+                            <i class="fas fa-paw fa-3x text-white"></i>
+                        </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="card-title">{{ product.name }}</h3>
+
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3" style="margin-top: 5px;">
+                                    <h4 class="text-primary">{{ "%.2f"|format(product.price) }} Br</h4>
+                                    <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if product.stock > 0 %}
+                                            В наличии
+                                        {% else %}
+                                            Нет в наличии
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="d-grid gap-2" style="margin-top: 7px;">
+                                    <a href="{{ url_for('product_detail', id=product.id) }}"
+                                       class="btn btn-outline-primary">
+                                        Подробнее
+                                    </a>
+
+                                    {% if product.stock > 0 %}
+                                    <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}">
+                                        <button type="submit" class="btn btn-primary w-100" style="margin-top: 7px;">
+                                            <i class="fas fa-cart-plus me-2"></i>В корзину
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <button class="btn btn-secondary w-100" disabled>
+                                        Недоступно
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Пагинация -->
+            <nav aria-label="Page navigation" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+                    <li class="page-item {% if page_num == products.page %}active{% endif %}">
+                        <a class="page-link"
+                           href="{{ url_for('search', page=page_num, q=search_query) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-search me-2"></i>
+                По запросу "{{ search_query }}" ничего не найдено
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

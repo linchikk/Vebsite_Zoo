@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 800px; margin: 2rem auto;">
+    <h2 class="mb-4">Оформление заказа</h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="row">
+            <!-- Левая колонка - форма -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title">Данные доставки</h4>
+
+                        <!-- Поле: Телефон -->
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control" + (' is-invalid' if form.phone.errors else '')) }}
+                            {% for error in form.phone.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Поле: Адрес -->
+                        <div class="mb-3">
+                            {{ form.address.label(class="form-label") }}
+                            {{ form.address(class="form-control" + (' is-invalid' if form.address.errors else '')) }}
+                            {% for error in form.address.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Поле: Комментарий -->
+                        <div class="mb-3">
+                            {{ form.comment.label(class="form-label") }}
+                            {{ form.comment(class="form-control") }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка подтверждения ВНУТРИ формы -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Подтвердить заказ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Правая колонка - корзина -->
+            <div class="col-md-6">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-body">
+                        <h4 class="card-title">Ваш заказ</h4>
+                        <div class="list-group list-group-flush">
+                            {% for item in cart_items %}
+                            <div class="list-group-item d-flex justify-content-between">
+                                <span>{{ item.product.name }} (×{{ item.quantity }})</span>
+                                <span>{{ "%.2f"|format(item.product.price * item.quantity) }} Br</span>
+                            </div>
+                            {% endfor %}
+                            <div class="list-group-item fw-bold d-flex justify-content-between">
+                                <span>Итого:</span>
+                                <span>{{ "%.2f"|format(total) }} Br</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form> <!-- Форма закрывается здесь -->
+</div>
+{% endblock %}

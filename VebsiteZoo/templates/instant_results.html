@@ -1,0 +1,14 @@
+{% if results %}
+    {% for product in results %}
+    <a href="{{ url_for('product_detail', id=product.id) }}" class="instant-item">
+        <div class="instant-item-content">
+            <h6>{{ product.name }}</h6>
+            <small class="text-muted">{{ "%.2f"|format(product.price) }} Br</small>
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="instant-item">
+        <div class="text-muted">Ничего не найдено</div>
+    </div>
+{% endif %}

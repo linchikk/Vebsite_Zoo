@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BluePaws - Зоомагазин{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <i class="fas fa-paw"></i> Paws & Claws
+            </a>
+  <!-- Форма поиска -->
+            <div class="search-container">
+                <form action="{{ url_for('search') }}" method="GET">
+                    <div class="search-box">
+                        <input type="text"
+                               name="q"
+                               placeholder="Поиск товаров..."
+                               value="{{ request.args.get('q', '') }}"
+                               autocomplete="off">
+                        <button type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                         <div id="instant-results" class="instant-results"></div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">Главная</a>
+                {% if current_user and current_user.is_admin %}
+                <a href="{{ url_for('admin_categories') }}">Категории</a>
+                <a href="{{ url_for('admin_products') }}">Товары</a>
+                <a href="{{ url_for('admin_users') }}">Пользователи</a>
+                <a href="{{ url_for('admin_orders') }}">Заказы</a>
+            {% endif %}
+                 {% if current_user %}
+                {% if not current_user.is_admin %}
+                   <a href="{{ url_for('cart') }}" class="cart-btn position-relative">
+    <i class="fas fa-shopping-cart me-1"></i>
+    Корзина
+    {% if cart_count > 0 %}
+    <span class="cart-counter">
+        {{ cart_count }}
+        <svg class="counter-bg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48"/>
+        </svg>
+    </span>
+    {% endif %}
+</a>
+                 {% endif %}
+                    <a href="{{ url_for('profile') }}">Профиль</a>
+                    <a href="{{ url_for('logout') }}">Выйти</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Войти</a>
+                    <a href="{{ url_for('register') }}">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- Новая секция категорий -->
+    <section class="categories-list">
+    {% for category in categories %}
+        <li class="category-item">
+            <a href="{{ url_for('index', category=category.id) }}" class="category-link has-submenu">{{ category.name }}</a>
+            {% if category.subcategories %}
+                <ul class="subcategories-dropdown">
+                    {% for subcategory in category.subcategories %}
+                        <li><a href="{{ url_for('index', subcategory=subcategory.id) }}">{{ subcategory.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </section>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Плавающая кнопка чата (только для авторизованных пользователей) -->
+    {% if current_user %}
+        <a href="
+        {% if current_user.is_admin %}
+        {{ url_for('admin_support') }}
+        {% else %}
+        {{ url_for('support') }}
+        {% endif %}"
+           class="floating-chat-btn"
+           id="chat-button">
+            <i class="fas fa-comment"></i>
+        </a>
+    {% endif %}
+
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p>© 2025 Paws & Claws. Все права защищены</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-telegram"></i></a>
+            </div>
+        </div>
+    </footer>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="q"]');
+    const searchResults = document.getElementById('instant-results');
+
+    // Функция для отображения результатов
+    function showResults(data) {
+        searchResults.innerHTML = data.html;
+        searchResults.style.display = 'block';
+    }
+
+    // Обработчик ввода
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value;
+        if(query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        fetch(`/instant-search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(showResults)
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Скрытие результатов при клике вне области
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-container')) {
+            searchResults.style.display = 'none';
+        }
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    // Очистка поиска и обновление страницы
+    document.querySelectorAll('.clear-search').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            input.value = '';
+            this.closest('form').submit(); // Отправляем пустой запрос
+        });
+    });
+
+    // Динамическое отображение крестика
+    document.querySelectorAll('.admin-search input').forEach(input => {
+        input.addEventListener('input', function() {
+            const clearBtn = this.nextElementSibling;
+            clearBtn.style.display = this.value ? 'block' : 'none';
+        });
+    });
+
+    // В конец существующего скрипта
+function updateCartCounter(count) {
+    const counter = document.querySelector('.cart-counter');
+    if (counter) {
+        counter.textContent = count;
+        counter.style.display = count > 0 ? 'flex' : 'none';
+    }
+}
+
+// Пример использования после добавления в корзину:
+document.querySelectorAll('.add-to-cart').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const response = await fetch(btn.dataset.url);
+        const data = await response.json();
+        updateCartCounter(data.new_count);
+    });
+});
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+
+        // Общая логика соединения
+        socket.on('connect', () => {
+            {% if current_user %}
+                socket.emit('authenticate', {user_id: {{ current_user.id }} });
+            {% endif %}
+        });
+    });
+</script>
+</body>
+</html>

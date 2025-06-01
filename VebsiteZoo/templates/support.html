@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h3>Чат поддержки</h3>
+        <div id="connection-status" class="status-connected">
+            <i class="fas fa-circle"></i> Онлайн
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+        {% for message in messages %}
+            <div class="message {% if message.user_id == current_user.id %}user-message{% else %}admin-message{% endif %}">
+                <div class="message-content">{{ message.content }}</div>
+                <div class="message-time">{{ message.timestamp.strftime('%H:%M') }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="chat-form" id="chat-form">
+    <input type="text" id="message-input" placeholder="Введите сообщение..." autocomplete="off">
+    <button id="send-button">
+        <i class="fas fa-paper-plane"></i>
+    </button>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const socket = io();
+    const chatId = {{ chat.id }};
+    const userId = {{ current_user.id }};
+
+    // Подключение к чату
+    socket.on('connect', () => {
+        socket.emit('join_chat', { chat_id: chatId });
+    });
+
+    // Функция отправки сообщения
+    function sendMessage() {
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value.trim();
+
+        if (message) {
+            socket.emit('message', {
+                chat_id: chatId,
+                message: message
+            });
+            addMessage(message, userId, '{{ current_user.username }}');
+            messageInput.value = '';
+            messageInput.focus();
+        }
+    }
+
+    // Обработчики отправки
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    // Функция добавления сообщения
+    function addMessage(text, senderId, senderName) {
+        const messagesDiv = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        const isCurrentUser = (senderId === userId);
+
+        messageDiv.className = isCurrentUser ? 'message user-message' : 'message admin-message';
+        messageDiv.innerHTML = `
+            <div class="message-content">${text}</div>
+            <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div>
+        `;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Получение новых сообщений
+    socket.on('new_message', (data) => {
+        if (data.chat_id == chatId && data.sender_id != userId) {
+            addMessage(data.message, data.sender_id, data.sender_name);
+        }
+    });
+});
+</script>
+{% endblock %}

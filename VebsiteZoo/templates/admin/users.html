@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+    <h2>Управление пользователями</h2>
+    <form class="admin-search" action="{{ url_for('admin_search_users') }}" method="GET">
+        <div class="search-input-wrapper">
+        <input type="text" name="q" placeholder="Поиск по имени или email..." value="{{ request.args.get('q', '') }}">
+            <button type="button" class="clear-search" aria-label="Очистить поиск">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i>
+        </button>
+    </form>
+</div>
+    <table class="table">
+        <thead>
+            <tr>
+
+                <th>Логин</th>
+                <th>Email</th>
+                <th>Админ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{% if user.is_admin %}Да{% else %}Нет{% endif %}</td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="profile container mt-4">
+    <h1 class="mb-4">Профиль пользователя</h1>
+
+    <div class="card p-4 mb-4">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+        {{ form.username.label(class="form-label") }}
+        {{ form.username(class="form-control") }}
+        {% for error in form.username.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+            <div class="mb-3" style="margin-top: 15px;" >
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control") }}
+                {% for error in form.email.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="d-grid" style="margin-top: 15px;">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+
+    {% if not user.is_admin %}
+    <div class="mt-4" style="margin-top: 15px;">
+        <h4>История заказов</h4>
+
+        {% if user.orders %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>№ Заказа</th>
+                        <th>Дата</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Адрес доставки</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in user.orders|reverse %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>{{ "%.2f"|format(order.total) }} Br</td>
+                        <td>
+                            <span class="badge
+                                {% if order.status.name == 'CREATED' %}bg-primary
+                                {% elif order.status.name == 'PROCESSING' %}bg-warning
+                                {% elif order.status.name == 'SHIPPED' %}bg-success
+                                {% else %}bg-danger{% endif %}" style="font-family: inherit; font-size: 0.9em; font-weight: normal;">
+                                {{ order.status.value }}
+                            </span>
+                        </td>
+                       <td style="max-width: 300px; word-wrap: break-word;">
+                            {{ order.address }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">У вас пока нет заказов</div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

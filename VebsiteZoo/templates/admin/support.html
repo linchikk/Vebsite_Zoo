@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>Активные чаты поддержки</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Пользователь</th>
+                <th>Дата создания</th>
+                <th>Последнее сообщение</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chat in chats %}
+            <tr>
+                <td>{{ chat.user.username }}</td>
+                <td>{{ chat.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>
+                    {% if chat.messages %}
+                        {{ chat.messages[-1].timestamp.strftime('%H:%M') }}:
+                        {{ chat.messages[-1].content|truncate(30) }}
+                    {% else %}
+                        Нет сообщений
+                    {% endif %}
+                </td>
+<td>
+    {% if chat.is_active %}
+        <span class="badge badge-success">Активен</span>
+    {% else %}
+        <span class="badge badge-secondary">Неактивен</span>
+    {% endif %}
+    <br>
+    <small>{{ chat.last_activity.strftime('%H:%M') }}</small>
+</td>
+                <td>
+                    <a href="{{ url_for('admin_chat_detail', chat_id=chat.id) }}"
+                       class="btn btn-primary btn-sm">
+                        <i class="fas fa-comments"></i> Открыть чат
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Нет активных чатов</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+const socket = io();
+
+socket.on('new_message', (data) => {
+    // Обновление списка чатов при новом сообщении
+    updateChatList();
+});
+
+function updateChatList() {
+    fetch('/admin/chats-data')
+        .then(response => response.json())
+        .then(chats => {
+            // Обновляем таблицу с активными чатами
+        });
+}
+</script>
+{% endblock %}

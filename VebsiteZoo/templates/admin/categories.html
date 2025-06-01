@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h2>Управление категориями</h2>
+        <form class="admin-search" action="{{ url_for('admin_search_categories') }}" method="GET">
+            <div class="search-input-wrapper">
+                <input type="text" name="q" placeholder="Поиск по названию..." value="{{ request.args.get('q', '') }}">
+                <button type="button" class="clear-search" aria-label="Очистить поиск">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+
+  <div class="d-flex gap-3" style="display: flex; gap: 15px;">
+    <a href="{{ url_for('admin_new_category') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Добавить категорию
+    </a>
+    <a href="{{ url_for('admin_new_subcategory') }}" class="btn btn-primary">
+        <i class="fas fa-layer-group"></i> Добавить подкатегорию
+    </a>
+</div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Подкатегории</th> <!-- Новая колонка -->
+                <th>Редактирование</th>
+                <th>Удаление</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>
+    {% if category.subcategories %}
+      <ul class="list-unstyled mb-0">
+    {% for sub in category.subcategories %}
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <span class="flex-grow-1">{{ sub.name }}</span> <!-- Занимает всё свободное пространство -->
+
+             <!-- Кнопка редактирования -->
+            <a href="{{ url_for('admin_edit_subcategory', id=sub.id) }}"
+               class="btn-edit-custom"
+               title="Редактировать">
+                <i class="fas fa-edit"></i>
+            </a>
+
+            <form action="{{ url_for('admin_delete_subcategory', id=sub.id) }}" method="POST"  >
+                <button type="submit"
+                        class="btn-close-custom"
+                        onclick="return confirm('Удалить подкатегорию?')">
+                    &times;
+                </button>
+            </form>
+        </div>
+    {% endfor %}
+</ul>
+    {% else %}
+        <span class="text-muted">Нет подкатегорий</span>
+    {% endif %}
+</td>
+                <td>
+                    <a href="{{ url_for('admin_edit_category', id=category.id) }}"
+                       class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"> Редактировать</i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{{ url_for('admin_delete_category', id=category.id) }}" method="POST">
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Удалить категорию?')">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

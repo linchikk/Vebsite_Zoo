@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="cart" style="margin: 0 4%;">
+    <h1 class="mb-4">Ваша корзина</h1>
+    
+    {% if cart_items %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Итого</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                 {% if item.product %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ "%.2f"|format(item.product.price) }} Br</td>
+                   <td>
+                        <div class="d-flex align-items-center gap-2" style="display: flex;">
+                            <form action="{{ url_for('decrease_quantity', cart_id=item.id) }}" method="POST">
+                                <button type="submit" class="btn btn-sm btn-outline-primary quantity-btn">-</button>
+                            </form>
+                            <span>{{ item.quantity }}</span>
+                            <form action="{{ url_for('increase_quantity', cart_id=item.id) }}" method="POST">
+                                <button type="submit" class="btn btn-sm btn-outline-primary quantity-btn" >+</button>
+                            </form>
+                        </div>
+                    </td>
+                    <td>{{ "%.2f"|format(item.product.price * item.quantity) }} Br</td>
+                    <td>
+                        <a href="{{ url_for('remove_from_cart', cart_id=item.id) }}" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="5">Продукт не найден</td>
+        </tr>
+    {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="total-sum text-end mb-4" style="margin-top: 20px;">
+        <h4>Общая сумма: {{ "%.2f"|format(total) }} Br</h4>
+    </div>
+
+    <div class="text-end" style="margin-top: 20px;">
+        <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">
+            Оформить заказ
+        </a>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        Ваша корзина пуста
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

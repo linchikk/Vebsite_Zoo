@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+    <h2>Управление товарами</h2>
+      <form class="admin-search" action="{{ url_for('admin_search_products') }}" method="GET">
+        <div class="search-input-wrapper">
+            <input type="text" name="q" placeholder="Поиск по названию..." value="{{ request.args.get('q', '') }}">
+            <button type="button" class="clear-search" aria-label="Очистить поиск">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i>
+        </button>
+    </form>
+    </div>
+    <a href="{{ url_for('admin_new_product') }}" class="btn btn-primary">
+        Добавить товар
+    </a>
+
+    <table class="table">
+        <thead>
+            <tr>
+
+                <th>Название</th>
+                <th>Цена</th>
+                <th>Категория</th>
+                <th>Подкатегория</th>
+                <th>Редактирование</th>
+                <th>Удаление</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+
+                <td>{{ product.name }}</td>
+                <td>{{ "%.2f"|format(product.price) }}  Br</td>
+                <td>{{ product.category.name }}</td>
+                <td>
+                {% if product.subcategory %}
+                    {{ product.subcategory.name }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+                <td>
+                    <a href="{{ url_for('admin_edit_product', id=product.id) }}"
+                       class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"> Редактировать</i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{{ url_for('admin_delete_product', id=product.id) }}" method="POST">
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Удалить товар?')">
+                            <i class="fas fa-trash"> Удалить</i>
+                        </button>
+                            </form>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

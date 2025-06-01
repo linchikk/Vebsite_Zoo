@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>Детали заказа #{{ order.id }}</h2>
+    
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3>Информация о заказе</h3>
+            <div class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>Пользователь:</strong> {{ order.user.username }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Дата:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Статус:</strong> 
+                    <span class="badge 
+                        {% if order.status.name == 'CREATED' %}bg-primary
+                        {% elif order.status.name == 'PROCESSING' %}bg-warning
+                        {% elif order.status.name == 'SHIPPED' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ order.status.value }}
+                    </span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Телефон:</strong> {{ order.phone }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Адрес:</strong> {{ order.address }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Комментарий:</strong> {{ order.comment or '—' }}
+                </li>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h2>Товары в заказе</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Количество</th>
+                        <th>Цена</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ "%.2f"|format(item.price) }} Br</td>
+                        <td>{{ "%.2f"|format(item.price * item.quantity) }} Br</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4" style="margin-top: 10px;">
+        <h4>Изменение статуса</h4>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="row" style="margin-top: 10px;">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                    </div>
+                </div>
+                <div class="col-md-6" style="margin-top: 10px;">
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

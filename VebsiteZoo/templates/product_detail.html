@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="product-detail">
+    <div class="row" style="display: flex; gap: 150px;">
+        <!-- Колонка с изображением (440x600) -->
+        <div class="col-md-6 mb-4" style="margin-left: 50px;">
+            <div class="product-image-container">
+                {% if product.image %}
+                    <img src="{{ url_for('static', filename=product.image) }}"
+                         alt="{{ product.name }}"
+                         class="product-image">
+                {% else %}
+                    <div class="image-placeholder">
+                        <i class="fas fa-image fa-4x"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Колонка с информацией -->
+        <div class="col-md-6" style="margin-top: 50px;">
+            <h1 class="product-title">{{ product.name }}</h1>
+            <p class="product-description">{{ product.description }}</p>
+
+            <div class="stock-status" >
+                {% if product.stock > 0 %}
+                    <span class="in-stock">
+                        <i class="fas fa-check"></i> В наличии: {{ product.stock }}
+                    </span>
+                {% else %}
+                    <span class="out-of-stock">
+                        <i class="fas fa-times"></i> Нет в наличии
+                    </span>
+                {% endif %}
+            </div>
+
+            <h1 class="product-price">{{ "%.2f"|format(product.price) }} Br</h1>
+
+                <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-cart-plus"></i> Добавить в корзину
+                    </button>
+                </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
